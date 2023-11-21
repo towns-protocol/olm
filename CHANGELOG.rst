@@ -10,6 +10,7 @@ This release includes the following changes since 3.2.15:
 * Improvements to Nix flake (Thanks to Jon Ringer)
   * Improve structure.
   * Enable Darwin builds.
+* Typescript type fix.
 
 Changes in `3.2.14 <https://gitlab.matrix.org/matrix-org/olm/tags/3.2.14>`_
 ===========================================================================
