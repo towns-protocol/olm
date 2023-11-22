@@ -24,7 +24,7 @@ find libolm -name \#\*\# -delete
 
 echo "Building"
 patch -p1 < $SRC/packaging.diff
-python3 setup.py sdist
+python3 -m build -s
 
 echo "Copying result"
 mkdir -p $SRC/dist
