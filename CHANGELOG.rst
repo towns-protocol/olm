@@ -1,7 +1,14 @@
-Changes in `3.2.15 <https://gitlab.matrix.org/matrix-org/olm/tags/3.2.15>`_
+Changes in `3.2.16 <https://gitlab.matrix.org/matrix-org/olm/tags/3.2.16>`_
 ===========================================================================
 
 This release includes the following changes since 3.2.15:
+
+* Fix and modernize the Python packaging (thanks to Alfred Wingate)
+
+Changes in `3.2.15 <https://gitlab.matrix.org/matrix-org/olm/tags/3.2.15>`_
+===========================================================================
+
+This release includes the following changes since 3.2.14:
 
 * Improvements to Python packaging
   * No longer depend on ``future`` since Python 2 is no longer supported.
