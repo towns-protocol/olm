@@ -5,7 +5,7 @@ if (typeof window !== "undefined") {
     get_random_values = function (buf) {
         window.crypto.getRandomValues(buf);
     };
-} else if (module["exports"]) {
+} else if (typeof module === "object" && module.exports) {
     // We're running in node.
     var nodeCrypto = require("crypto");
     get_random_values = function (buf) {
@@ -37,11 +37,12 @@ if (typeof OLM_OPTIONS !== "undefined") {
  */
 var NULL_BYTE_PADDING_LENGTH = 1;
 
-Module["onRuntimeInitialized"] = function () {
+Module["onRuntimeInitialized"] = () => {
     OLM_ERROR = Module["_olm_error"]();
-    if (onInitSuccess) onInitSuccess();
 };
 
-Module["onAbort"] = function (err) {
-    if (onInitFail) onInitFail(err);
-};
+/* Optional custom abort hook – remove if unused */
+// Module["onAbort"] = err => console.error(err);
+
+// ---- async helper expected by the user ----
+Module.initAsync = () => Module.ready;

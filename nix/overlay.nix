@@ -39,7 +39,7 @@ final: prev: {
 
     src = ./..;
 
-    nativeBuildInputs = with prev; [ gnumake python3 nodejs nodePackages.pnpm ];
+    nativeBuildInputs = with prev; [ gnumake python3 nodejs nodePackages.pnpm cacert ];
     # FIXME: Disabling checks temporarily because the build process was changed
     # (wrappers not bundled) and the existing `npm test` checkPhase fails.
     # Re-enable and fix the checkPhase below once the JS wrappers/tests are updated.
@@ -52,12 +52,15 @@ final: prev: {
     configurePhase = false;
 
     buildPhase = ''
+      echo "emcc --version"
+      emcc --version &>/dev/stdout
       export EM_CACHE=$TMPDIR
       make javascript/exported_functions.json
       make js
     '';
 
     installPhase = ''
+    
       mkdir -p $out/javascript
       cd javascript
       echo sha256: > checksums.txt

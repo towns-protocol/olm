@@ -34,7 +34,7 @@ JS_ESM_TARGET := javascript/olm.mjs
 # JS_CJS_TARGET := javascript/olm.cjs
 
 JS_EXPORTED_FUNCTIONS := javascript/exported_functions.json
-JS_EXPORTED_RUNTIME_METHODS := [ALLOC_STACK,writeAsciiToMemory,intArrayFromString,UTF8ToString,stringToUTF8]
+JS_EXPORTED_RUNTIME_METHODS := [ALLOC_STACK,stackAlloc,writeAsciiToMemory,stringToAscii,intArrayFromString,UTF8ToString,stringToUTF8]
 JS_EXTERNS := javascript/externs.js
 
 PUBLIC_HEADERS := include/olm/olm.h include/olm/outbound_group_session.h include/olm/inbound_group_session.h include/olm/pk.h include/olm/sas.h include/olm/error.h include/olm/olm_export.h
@@ -101,7 +101,11 @@ CXXFLAGS_NATIVE = -fPIC
 
 # TODO: change closure 1 to release
 # add O3 to release
-EMCCFLAGS = --closure 0 --memory-init-file 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s -sMODULARIZE=1 -Wno-error=closure
+# thats good for web is guess
+# EMCCFLAGS = --closure 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s ASSERTIONS=1 -sMODULARIZE=instance -Wno-error=closure -Wno-error=experimental -Wno-deprecated
+
+EMCCFLAGS = --closure 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s ASSERTIONS=1 -sMODULARIZE=1 -Wno-error=closure -Wno-error=experimental -Wno-deprecated
+
 
 
 # Flags specific to ESM build (Wasm)
@@ -111,7 +115,9 @@ EMCCFLAGS = --closure 0 --memory-init-file 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RU
 # mind that the plaintext can only be 48K because base64). We also have about
 # 36K of statics. So let's have 256K of memory.
 # (This can't be changed by the app with wasm since it's baked into the wasm).
-EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
+# EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
+EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=node
+
 
 EMCC.c = $(EMCC) $(CFLAGS) $(CPPFLAGS) -c -DNDEBUG -DOLM_STATIC_DEFINE=1
 EMCC.cc = $(EMCC) $(CXXFLAGS) $(CPPFLAGS) -c -DNDEBUG -DOLM_STATIC_DEFINE=1

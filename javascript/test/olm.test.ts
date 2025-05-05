@@ -17,47 +17,78 @@ limitations under the License.
 
 "use strict";
 
-import { describe, it, expect } from "vitest";
-// import Olm from "../olm.mjs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import Olm from "../../result/javascript/olm.mjs";
 
-describe("Olm WASM Initialization", () => {
-    // it("should initialize the WASM module successfully", async () => {
-    //     // Calling Olm({}) starts initialization and returns the promise
-    //     const initPromise = Olm({});
+describe("olm", function () {
+    let aliceAccount;
+    let bobAccount;
+    let aliceSession;
+    let bobSession;
 
-    //     // Assert that the promise resolves without errors.
-    //     // We expect it to resolve to the module object, which should be defined.
-    //     await expect(initPromise).resolves.toBeDefined();
+    beforeEach(async () => {
+        const A = await Olm();
+        A.initAsync();
+        aliceAccount = new A.Account();
+        bobAccount = new A.Account();
+        aliceSession = new A.Session();
+        bobSession = new A.Session();
+    });
 
-    //     // Further check the resolved module object for expected properties
-    //     const olmInstance = await initPromise;
-    //     expect(olmInstance).toBeInstanceOf(Object);
+    afterEach(function () {
+        if (aliceAccount !== undefined) {
+            aliceAccount.free();
+            aliceAccount = undefined;
+        }
 
-    //     // Check if core classes are defined on the resolved instance
-    //     expect(olmInstance.Account).toBeDefined();
-    //     expect(olmInstance.Session).toBeDefined();
-    //     expect(olmInstance.Utility).toBeDefined();
-    //     expect(olmInstance.PkEncryption).toBeDefined();
-    //     expect(olmInstance.PkDecryption).toBeDefined();
-    //     expect(olmInstance.PkSigning).toBeDefined();
-    //     expect(olmInstance.SAS).toBeDefined();
-    //     expect(olmInstance.InboundGroupSession).toBeDefined();
-    //     expect(olmInstance.OutboundGroupSession).toBeDefined();
+        if (bobAccount !== undefined) {
+            bobAccount.free();
+            bobAccount = undefined;
+        }
 
-    //     // Check if a core internal function (like _olm_error) exists
-    //     expect(olmInstance._olm_error).toBeInstanceOf(Function);
+        if (aliceSession !== undefined) {
+            aliceSession.free();
+            aliceSession = undefined;
+        }
 
-    //     // Check the library version function
-    //     expect(olmInstance.get_library_version).toBeInstanceOf(Function);
-    //     const version = olmInstance.get_library_version();
-    //     expect(version).toBeInstanceOf(Array);
-    //     expect(version.length).toBe(3);
-    //     expect(typeof version[0]).toBe("number");
-    //     expect(typeof version[1]).toBe("number");
-    //     expect(typeof version[2]).toBe("number");
-    // });
+        if (bobSession !== undefined) {
+            bobSession.free();
+            bobSession = undefined;
+        }
+    });
 
-    it("passes the test suite", () => {
-        expect(true).toBe(true);
+    it("should encrypt and decrypt", function () {
+        aliceAccount.create();
+        bobAccount.create();
+
+        bobAccount.generate_one_time_keys(1);
+        var bobOneTimeKeys = JSON.parse(bobAccount.one_time_keys()).curve25519;
+        bobAccount.mark_keys_as_published();
+
+        var bobIdKey = JSON.parse(bobAccount.identity_keys()).curve25519;
+
+        var otk_id = Object.keys(bobOneTimeKeys)[0];
+
+        aliceSession.create_outbound(
+            aliceAccount,
+            bobIdKey,
+            bobOneTimeKeys[otk_id]
+        );
+
+        var TEST_TEXT = "têst1";
+        var encrypted = aliceSession.encrypt(TEST_TEXT);
+        expect(encrypted.type).toEqual(0);
+        bobSession.create_inbound(bobAccount, encrypted.body);
+        bobAccount.remove_one_time_keys(bobSession);
+        var decrypted = bobSession.decrypt(encrypted.type, encrypted.body);
+        console.log(TEST_TEXT, "->", decrypted);
+        expect(decrypted).toEqual(TEST_TEXT);
+
+        TEST_TEXT = "hot beverage: ☕";
+        encrypted = bobSession.encrypt(TEST_TEXT);
+        expect(encrypted.type).toEqual(1);
+        decrypted = aliceSession.decrypt(encrypted.type, encrypted.body);
+        console.log(TEST_TEXT, "->", decrypted);
+        expect(decrypted).toEqual(TEST_TEXT);
     });
 });
