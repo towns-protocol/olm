@@ -1,17 +1,17 @@
 var get_random_values;
 
-if (typeof(window) !== 'undefined') {
+if (typeof window !== "undefined") {
     // We're in a browser (directly, via browserify, or via webpack).
-    get_random_values = function(buf) {
+    get_random_values = function (buf) {
         window.crypto.getRandomValues(buf);
     };
 } else if (module["exports"]) {
     // We're running in node.
     var nodeCrypto = require("crypto");
-    get_random_values = function(buf) {
+    get_random_values = function (buf) {
         // [''] syntax needed here rather than '.' to prevent
         // closure compiler from mangling the import(!)
-        var bytes = nodeCrypto['randomBytes'](buf.length);
+        var bytes = nodeCrypto["randomBytes"](buf.length);
         buf.set(bytes);
     };
 } else {
@@ -21,7 +21,7 @@ if (typeof(window) !== 'undefined') {
 /* applications should define OLM_OPTIONS in the environment to override
  * emscripten module settings
  */
-if (typeof(OLM_OPTIONS) !== 'undefined') {
+if (typeof OLM_OPTIONS !== "undefined") {
     for (var olm_option_key in OLM_OPTIONS) {
         if (OLM_OPTIONS.hasOwnProperty(olm_option_key)) {
             Module[olm_option_key] = OLM_OPTIONS[olm_option_key];
@@ -37,12 +37,11 @@ if (typeof(OLM_OPTIONS) !== 'undefined') {
  */
 var NULL_BYTE_PADDING_LENGTH = 1;
 
-Module['onRuntimeInitialized'] = function() {
-    OLM_ERROR = Module['_olm_error']();
-    olm_exports["PRIVATE_KEY_LENGTH"] = Module['_olm_pk_private_key_length']();
+Module["onRuntimeInitialized"] = function () {
+    OLM_ERROR = Module["_olm_error"]();
     if (onInitSuccess) onInitSuccess();
 };
 
-Module['onAbort'] = function(err) {
+Module["onAbort"] = function (err) {
     if (onInitFail) onInitFail(err);
 };

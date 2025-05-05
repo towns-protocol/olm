@@ -1,12 +1,11 @@
-Olm
-===
+# Olm
 
 Note: before using any of the olm functions, you must call `Olm.init()`, and
 wait for the promise to resolve, otherwise you will get errors like:
 `Uncaught TypeError: Olm.Account is not a constructor`
 
 If you get errors about failure to compile the wasm file, it is likely that Olm
-is not locating the wasm file properly.  You can tell Olm where the wasm file
+is not locating the wasm file properly. You can tell Olm where the wasm file
 is by passing a `locateFile` parameter to `Olm.init()`, for example:
 `Olm.init({locateFile: () => pathToWasmFile})`.
 
@@ -33,7 +32,6 @@ Example:
     var plaintext = bob_session.decrypt(message_1.type, bob_message);
     bob.remove_one_time_keys(bob_session);
 
-
 Group chat:
 
     var outbound_session = new Olm.OutboundGroupSession();
@@ -49,3 +47,12 @@ Group chat:
 
     var ciphertext = outbound_session.encrypt("Hello");
     var plaintext = inbound_session.decrypt(ciphertext);
+
+## PNPM Usage
+
+This project supports PNPM as a package manager. To use PNPM:
+
+1. Make sure PNPM is installed (if using Nix: `nix develop`)
+2. Install dependencies: `pnpm install`
+3. Run tests: `pnpm test`
+4. Build the project: `pnpm build`

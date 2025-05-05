@@ -29,6 +29,10 @@ JS_WASM_TARGET := javascript/olm.js
 JS_ASMJS_TARGET := javascript/olm_legacy.js
 WASM_TARGET := $(BUILD_DIR)/wasm/libolm.a
 
+# Define target filenames for ESM and CJS outputs
+JS_ESM_TARGET := javascript/olm.mjs
+# JS_CJS_TARGET := javascript/olm.cjs
+
 JS_EXPORTED_FUNCTIONS := javascript/exported_functions.json
 JS_EXPORTED_RUNTIME_METHODS := [ALLOC_STACK,writeAsciiToMemory,intArrayFromString,UTF8ToString,stringToUTF8]
 JS_EXTERNS := javascript/externs.js
@@ -62,6 +66,8 @@ WASM_OBJECTS := $(addprefix $(BUILD_DIR)/wasm/,$(OBJECTS))
 # They are injected inside the modularised code and
 # processed by the optimiser.
 JS_PRE := $(wildcard javascript/*pre.js)
+# Define separate pre-js for ESM build
+JS_PRE_ESM := javascript/olm_pre_esm.js
 JS_POST := javascript/olm_outbound_group_session.js \
     javascript/olm_inbound_group_session.js \
     javascript/olm_pk.js \
@@ -71,8 +77,8 @@ JS_POST := javascript/olm_outbound_group_session.js \
 # The prefix & suffix are just added onto the start & end
 # of what comes out emcc, so are outside of the modularised
 # code and not seen by the opimiser.
-JS_PREFIX := javascript/olm_prefix.js
-JS_SUFFIX := javascript/olm_suffix.js
+# JS_PREFIX := javascript/olm_prefix.js # Removing prefix/suffix mechanism
+# JS_SUFFIX := javascript/olm_suffix.js # Removing prefix/suffix mechanism
 
 DOCS := tracing/README.html \
     docs/megolm.html \
@@ -93,22 +99,23 @@ LDFLAGS += -Wall -Werror
 CFLAGS_NATIVE = -fPIC
 CXXFLAGS_NATIVE = -fPIC
 
-EMCCFLAGS = --closure 1 --memory-init-file 0 -s NO_FILESYSTEM=1 -s INVOKE_RUN=0 -s MODULARIZE=1 -Wno-error=closure
+# TODO: change closure 1 to release
+# add O3 to release
+EMCCFLAGS = --closure 0 --memory-init-file 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s -sMODULARIZE=1 -Wno-error=closure
 
+
+# Flags specific to ESM build (Wasm)
 # Olm generally doesn't need a lot of memory to encrypt / decrypt its usual
 # payloads (ie. Matrix messages), but we do need about 128K of heap to encrypt
 # a 64K event (enough to store the ciphertext and the plaintext, bearing in
 # mind that the plaintext can only be 48K because base64). We also have about
 # 36K of statics. So let's have 256K of memory.
 # (This can't be changed by the app with wasm since it's baked into the wasm).
-# (emscripten also mandates at least 16MB of memory for asm.js now, so
-# we don't use this for the legacy build.)
-EMCCFLAGS_WASM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH
-
-EMCCFLAGS_ASMJS += -s WASM=0
+EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
 
 EMCC.c = $(EMCC) $(CFLAGS) $(CPPFLAGS) -c -DNDEBUG -DOLM_STATIC_DEFINE=1
 EMCC.cc = $(EMCC) $(CXXFLAGS) $(CPPFLAGS) -c -DNDEBUG -DOLM_STATIC_DEFINE=1
+# Common linker invocation base
 EMCC_LINK = $(EMCC) $(LDFLAGS) $(EMCCFLAGS)
 
 AFL_CC = afl-clang-fast
@@ -165,6 +172,7 @@ $(JS_OBJECTS): CFLAGS += $(JS_OPTIMIZE_FLAGS)
 $(JS_OBJECTS): CXXFLAGS += $(JS_OPTIMIZE_FLAGS)
 $(JS_WASM_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
 $(JS_ASMJS_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
+$(JS_ESM_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
 
 ### Fix to make mkdir work on windows and linux
 ifeq ($(shell echo "check_quotes"),"check_quotes")
@@ -212,7 +220,7 @@ static: $(STATIC_RELEASE_TARGET)
 $(STATIC_RELEASE_TARGET): $(RELEASE_OBJECTS)
 	$(AR) rcs $@ $^
 
-js: $(JS_WASM_TARGET) $(JS_ASMJS_TARGET)
+js: $(JS_ESM_TARGET)
 .PHONY: js
 
 wasm: $(WASM_TARGET)
@@ -221,33 +229,22 @@ wasm: $(WASM_TARGET)
 $(WASM_TARGET): $(WASM_OBJECTS)
 	$(EMAR) rcs $@ $^
 
-javascript/olm_prefix.js: javascript/olm_prefix.js.in Makefile common.mk
-	sed s/@VERSION@/$(VERSION)/ javascript/olm_prefix.js.in > $@
-
-# Note that the output file we give to emcc determines the name of the
-# wasm file baked into the js, hence messing around outputting to olm.js
-# and then renaming it.
-$(JS_WASM_TARGET): $(JS_OBJECTS) $(JS_PRE) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(JS_PREFIX) $(JS_SUFFIX)
+# Rule for ESM target (olm.mjs) - Restore command line arguments
+$(JS_ESM_TARGET): $(JS_OBJECTS) $(JS_PRE) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(JS_PREFIX) $(JS_SUFFIX)
 	EMCC_CLOSURE_ARGS="--externs $(CURDIR)/$(JS_EXTERNS)" $(EMCC_LINK) \
-	       $(EMCCFLAGS_WASM) \
+	       $(EMCCFLAGS_ESM) \
                $(foreach f,$(JS_PRE),--pre-js $(f)) \
                $(foreach f,$(JS_POST),--post-js $(f)) \
                $(foreach f,$(JS_PREFIX),--extern-pre-js $(f)) \
                $(foreach f,$(JS_SUFFIX),--extern-post-js $(f)) \
-               -s "EXPORTED_FUNCTIONS=@$(JS_EXPORTED_FUNCTIONS)" \
-               -s "EXPORTED_RUNTIME_METHODS=$(JS_EXPORTED_RUNTIME_METHODS)" \
-               -o $@ $(JS_OBJECTS)
+               -sSINGLE_FILE=0 \
+               -sEXPORTED_FUNCTIONS=@$(JS_EXPORTED_FUNCTIONS) \
+               -sEXPORTED_RUNTIME_METHODS='$(JS_EXPORTED_RUNTIME_METHODS)' \
+               $(JS_OBJECTS) -o $@
 
-$(JS_ASMJS_TARGET): $(JS_OBJECTS) $(JS_PRE) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(JS_PREFIX) $(JS_SUFFIX)
-	EMCC_CLOSURE_ARGS="--externs $(CURDIR)/$(JS_EXTERNS)" $(EMCC_LINK) \
-	       $(EMCCFLAGS_ASMJS) \
-               $(foreach f,$(JS_PRE),--pre-js $(f)) \
-               $(foreach f,$(JS_POST),--post-js $(f)) \
-               $(foreach f,$(JS_PREFIX),--extern-pre-js $(f)) \
-               $(foreach f,$(JS_SUFFIX),--extern-post-js $(f)) \
-               -s "EXPORTED_FUNCTIONS=@$(JS_EXPORTED_FUNCTIONS)" \
-               -s "EXPORTED_RUNTIME_METHODS=$(JS_EXPORTED_RUNTIME_METHODS)" \
-               -o $@ $(JS_OBJECTS)
+# Generate olm_prefix.js from the template
+# javascript/olm_prefix.js: javascript/olm_prefix.js.in # Removing prefix rule
+# 	cp $< $@ # Removing prefix rule
 
 build_tests: $(TEST_BINARIES)
 
