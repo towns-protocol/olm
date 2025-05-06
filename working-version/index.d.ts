@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-declare class Account {
+export declare class Account {
     constructor();
     free(): void;
     create(): void;
@@ -33,7 +33,7 @@ declare class Account {
     unpickle(key: string | Uint8Array, pickle: string): void;
 }
 
-declare class Session {
+export declare class Session {
     constructor();
     free(): void;
     pickle(key: string | Uint8Array): string;
@@ -64,7 +64,7 @@ declare class Session {
     describe(): string;
 }
 
-declare class Utility {
+export declare class Utility {
     constructor();
     free(): void;
     sha256(input: string | Uint8Array): string;
@@ -75,7 +75,7 @@ declare class Utility {
     ): void;
 }
 
-declare class InboundGroupSession {
+export declare class InboundGroupSession {
     constructor();
     free(): void;
     pickle(key: string | Uint8Array): string;
@@ -91,7 +91,7 @@ declare class InboundGroupSession {
     export_session(message_index: number): string;
 }
 
-declare class OutboundGroupSession {
+export declare class OutboundGroupSession {
     constructor();
     free(): void;
     pickle(key: string | Uint8Array): string;
@@ -103,7 +103,7 @@ declare class OutboundGroupSession {
     message_index(): number;
 }
 
-declare class PkEncryption {
+export declare class PkEncryption {
     constructor();
     free(): void;
     set_recipient_key(key: string): void;
@@ -114,7 +114,7 @@ declare class PkEncryption {
     };
 }
 
-declare class PkDecryption {
+export declare class PkDecryption {
     constructor();
     free(): void;
     init_with_private_key(key: Uint8Array): string;
@@ -125,7 +125,7 @@ declare class PkDecryption {
     decrypt(ephemeral_key: string, mac: string, ciphertext: string): string;
 }
 
-declare class PkSigning {
+export declare class PkSigning {
     constructor();
     free(): void;
     init_with_seed(seed: Uint8Array): string;
@@ -133,7 +133,7 @@ declare class PkSigning {
     sign(message: string): string;
 }
 
-declare class SAS {
+export declare class SAS {
     constructor();
     free(): void;
     get_pubkey(): string;
@@ -144,22 +144,8 @@ declare class SAS {
     calculate_mac_long_kdf(input: string, info: string): string;
 }
 
-declare function get_library_version(): [number, number, number];
+export declare function get_library_version(): [number, number, number];
 
-declare const PRIVATE_KEY_LENGTH: number;
+export declare const PRIVATE_KEY_LENGTH: number;
 
-declare function initOlm(): Promise<{
-    get_library_version: typeof get_library_version;
-    PRIVATE_KEY_LENGTH: typeof PRIVATE_KEY_LENGTH;
-    Account: typeof Account;
-    Session: typeof Session;
-    Utility: typeof Utility;
-    InboundGroupSession: typeof InboundGroupSession;
-    OutboundGroupSession: typeof OutboundGroupSession;
-    PkEncryption: typeof PkEncryption;
-    PkDecryption: typeof PkDecryption;
-    PkSigning: typeof PkSigning;
-    SAS: typeof SAS;
-}>;
-
-export default initOlm;
+export declare function initAsync(): Promise<void>;

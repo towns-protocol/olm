@@ -1,6 +1,52 @@
+// Declare and export variables that will be populated after initialization
+export let Account;
+export let Session;
+export let Utility;
+export let OutboundGroupSession;
+export let InboundGroupSession;
+export let PkEncryption;
+export let PkDecryption;
+export let PkSigning;
+export let SAS;
+export let get_library_version;
+
 var _scriptName = import.meta.url;
 
-export default async function init(moduleArg = {}) {
+let isInitialized = false;
+let initializationPromise = null;
+
+export async function initAsync(moduleArg = {}) {
+  if (isInitialized) {
+    return;
+  }
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
+    const Module = await internalInit(moduleArg);
+
+    // Populate exported variables
+    Account = Module.Account;
+    Session = Module.Session;
+    Utility = Module.Utility;
+    OutboundGroupSession = Module.OutboundGroupSession;
+    InboundGroupSession = Module.InboundGroupSession;
+    PkEncryption = Module.PkEncryption;
+    PkDecryption = Module.PkDecryption;
+    PkSigning = Module.PkSigning;
+    SAS = Module.SAS;
+    get_library_version = Module.get_library_version;
+
+    isInitialized = true;
+    initializationPromise = null; // Clear the promise once resolved
+  })();
+
+  return initializationPromise;
+}
+
+// Rename the original init function to internalInit and remove export default
+async function internalInit(moduleArg = {}) {
   var moduleRtn;
 
   // include: shell.js
@@ -72,7 +118,7 @@ export default async function init(moduleArg = {}) {
 
   /* Optional custom abort hook – remove if unused */ // Module["onAbort"] = err => console.error(err);
   // ---- async helper expected by the user ----
-  Module.initAsync = () => Module.ready;
+  // Module.initAsync = () => Module.ready; // This line will be removed
 
   // end include: /private/tmp/nix-build-emscripten-olm_javascript-3.2.16.drv-0/dal9wg2bm6mr1kfx8ljbbh1la6nwz9fi-source/javascript/olm_pre.js
   // Sometimes an existing Module object exists with properties
