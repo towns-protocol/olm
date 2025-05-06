@@ -1,23 +1,21 @@
 {
-  "name": "@matrix-org/olm",
+  "name": "olm_test",
   "type": "module",
-  "version": "3.2.16",
+  "version": "experimental",
   "description": "An implementation of the Double Ratchet cryptographic ratchet",
   "exports": {
     ".": {
-      "default": "./olm_web.mjs",
       "node": "./olm_node.mjs",
+      "default": "./olm_web.mjs",
       "types": "./index.d.ts"
     }
   },
   "files": [
-    "olm.mjs",
+    "olm_web.mjs",
+    "olm_node.mjs",
     "olm.wasm",
-    "olm_legacy.js",
     "index.d.ts",
-    "README.md",
-    "checksums.txt",
-    "checksums.txt.asc"
+    "README.md"
   ],
   "scripts": {
     "build": "make -C .. js",

@@ -1,22 +1,6 @@
-var get_random_values;
-
-if (typeof window !== "undefined") {
-    // We're in a browser (directly, via browserify, or via webpack).
-    get_random_values = function (buf) {
-        window.crypto.getRandomValues(buf);
-    };
-} else if (typeof module === "object" && module.exports) {
-    // We're running in node.
-    var nodeCrypto = require("crypto");
-    get_random_values = function (buf) {
-        // [''] syntax needed here rather than '.' to prevent
-        // closure compiler from mangling the import(!)
-        var bytes = nodeCrypto["randomBytes"](buf.length);
-        buf.set(bytes);
-    };
-} else {
-    throw new Error("Cannot find global to attach library to");
-}
+var get_random_values = function (buf) {
+    window.crypto.getRandomValues(buf);
+};
 
 /* applications should define OLM_OPTIONS in the environment to override
  * emscripten module settings
@@ -38,7 +22,7 @@ if (typeof OLM_OPTIONS !== "undefined") {
 var NULL_BYTE_PADDING_LENGTH = 1;
 
 Module["onRuntimeInitialized"] = () => {
-    OLM_ERROR = Module["_olm_error"]();
+    OLM_ERROR = _olm_error();
 };
 
 /* Optional custom abort hook – remove if unused */

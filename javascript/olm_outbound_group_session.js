@@ -1,8 +1,8 @@
 /** @constructor */
 function OutboundGroupSession() {
-    var size = Module["_olm_outbound_group_session_size"]();
+    var size = _olm_outbound_group_session_size();
     this.buf = malloc(size);
-    this.ptr = Module["_olm_outbound_group_session"](this.buf);
+    this.ptr = _olm_outbound_group_session(this.buf);
 }
 
 function outbound_group_session_method(wrapped) {
@@ -10,7 +10,7 @@ function outbound_group_session_method(wrapped) {
         var result = wrapped.apply(this, arguments);
         if (result === OLM_ERROR) {
             var message = UTF8ToString(
-                Module["_olm_outbound_group_session_last_error"](arguments[0])
+                _olm_outbound_group_session_last_error(arguments[0])
             );
             throw new Error("OLM." + message);
         }
@@ -19,21 +19,25 @@ function outbound_group_session_method(wrapped) {
 }
 
 OutboundGroupSession.prototype["free"] = function () {
-    Module["_olm_clear_outbound_group_session"](this.ptr);
+    _olm_clear_outbound_group_session(this.ptr);
     free(this.ptr);
 };
 
 OutboundGroupSession.prototype["pickle"] = restore_stack(function (key) {
     var key_array = array_from_string(key);
     var pickle_length = outbound_group_session_method(
-        Module["_olm_pickle_outbound_group_session_length"]
+        _olm_pickle_outbound_group_session_length
     )(this.ptr);
     var key_buffer = stack(key_array);
     var pickle_buffer = stack(pickle_length + NULL_BYTE_PADDING_LENGTH);
     try {
-        outbound_group_session_method(
-            Module["_olm_pickle_outbound_group_session"]
-        )(this.ptr, key_buffer, key_array.length, pickle_buffer, pickle_length);
+        outbound_group_session_method(_olm_pickle_outbound_group_session)(
+            this.ptr,
+            key_buffer,
+            key_array.length,
+            pickle_buffer,
+            pickle_length
+        );
     } finally {
         // clear out copies of the pickle key
         bzero(key_buffer, key_array.length);
@@ -53,9 +57,7 @@ OutboundGroupSession.prototype["unpickle"] = restore_stack(function (
     var pickle_array = array_from_string(pickle);
     var pickle_buffer = stack(pickle_array);
     try {
-        outbound_group_session_method(
-            Module["_olm_unpickle_outbound_group_session"]
-        )(
+        outbound_group_session_method(_olm_unpickle_outbound_group_session)(
             this.ptr,
             key_buffer,
             key_array.length,
@@ -73,13 +75,15 @@ OutboundGroupSession.prototype["unpickle"] = restore_stack(function (
 
 OutboundGroupSession.prototype["create"] = restore_stack(function () {
     var random_length = outbound_group_session_method(
-        Module["_olm_init_outbound_group_session_random_length"]
+        _olm_init_outbound_group_session_random_length
     )(this.ptr);
     var random = random_stack(random_length);
     try {
-        outbound_group_session_method(
-            Module["_olm_init_outbound_group_session"]
-        )(this.ptr, random, random_length);
+        outbound_group_session_method(_olm_init_outbound_group_session)(
+            this.ptr,
+            random,
+            random_length
+        );
     } finally {
         // clear the random buffer
         bzero(random, random_length);
@@ -92,7 +96,7 @@ OutboundGroupSession.prototype["encrypt"] = function (plaintext) {
         plaintext_length = lengthBytesUTF8(plaintext);
 
         var message_length = outbound_group_session_method(
-            Module["_olm_group_encrypt_message_length"]
+            _olm_group_encrypt_message_length
         )(this.ptr, plaintext_length);
 
         // need to allow space for the terminator (which stringToUTF8 always
@@ -101,7 +105,7 @@ OutboundGroupSession.prototype["encrypt"] = function (plaintext) {
         stringToUTF8(plaintext, plaintext_buffer, plaintext_length + 1);
 
         message_buffer = malloc(message_length + NULL_BYTE_PADDING_LENGTH);
-        outbound_group_session_method(Module["_olm_group_encrypt"])(
+        outbound_group_session_method(_olm_group_encrypt)(
             this.ptr,
             plaintext_buffer,
             plaintext_length,
@@ -128,10 +132,10 @@ OutboundGroupSession.prototype["encrypt"] = function (plaintext) {
 
 OutboundGroupSession.prototype["session_id"] = restore_stack(function () {
     var length = outbound_group_session_method(
-        Module["_olm_outbound_group_session_id_length"]
+        _olm_outbound_group_session_id_length
     )(this.ptr);
     var session_id = stack(length + NULL_BYTE_PADDING_LENGTH);
-    outbound_group_session_method(Module["_olm_outbound_group_session_id"])(
+    outbound_group_session_method(_olm_outbound_group_session_id)(
         this.ptr,
         session_id,
         length
@@ -141,10 +145,10 @@ OutboundGroupSession.prototype["session_id"] = restore_stack(function () {
 
 OutboundGroupSession.prototype["session_key"] = restore_stack(function () {
     var key_length = outbound_group_session_method(
-        Module["_olm_outbound_group_session_key_length"]
+        _olm_outbound_group_session_key_length
     )(this.ptr);
     var key = stack(key_length + NULL_BYTE_PADDING_LENGTH);
-    outbound_group_session_method(Module["_olm_outbound_group_session_key"])(
+    outbound_group_session_method(_olm_outbound_group_session_key)(
         this.ptr,
         key,
         key_length
@@ -156,7 +160,7 @@ OutboundGroupSession.prototype["session_key"] = restore_stack(function () {
 
 OutboundGroupSession.prototype["message_index"] = function () {
     var idx = outbound_group_session_method(
-        Module["_olm_outbound_group_session_message_index"]
+        _olm_outbound_group_session_message_index
     )(this.ptr);
     return idx;
 };
