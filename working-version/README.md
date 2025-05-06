@@ -14,9 +14,9 @@ Types.
 Usage looks like the following:
 
 ```js
-import Olm from "./olm_web.mjs";
+import initOlm from "./olm_web.mjs";
 
-const olm = await (await Olm()).initAsync();
+const olm = await initOlm();
 const account = new olm.Account();
 ```
 

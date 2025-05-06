@@ -148,10 +148,7 @@ declare function get_library_version(): [number, number, number];
 
 declare const PRIVATE_KEY_LENGTH: number;
 
-declare function initAsync(): Promise<void>;
-
-declare function Olm(): Promise<{
-    initAsync: typeof initAsync;
+declare function initOlm(): Promise<{
     get_library_version: typeof get_library_version;
     PRIVATE_KEY_LENGTH: typeof PRIVATE_KEY_LENGTH;
     Account: typeof Account;
@@ -165,4 +162,4 @@ declare function Olm(): Promise<{
     SAS: typeof SAS;
 }>;
 
-export default Olm;
+export default initOlm;

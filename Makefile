@@ -66,8 +66,6 @@ WASM_OBJECTS := $(addprefix $(BUILD_DIR)/wasm/,$(OBJECTS))
 # They are injected inside the modularised code and
 # processed by the optimiser.
 JS_PRE := $(wildcard javascript/*pre.js)
-# Define separate pre-js for ESM build
-JS_PRE_ESM := javascript/olm_pre_esm.js
 JS_POST := javascript/olm_outbound_group_session.js \
     javascript/olm_inbound_group_session.js \
     javascript/olm_pk.js \
@@ -114,7 +112,7 @@ EMCCFLAGS = --closure 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s ASSERTIONS=0 -
 # 36K of statics. So let's have 256K of memory.
 # (This can't be changed by the app with wasm since it's baked into the wasm).
 # EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
-EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
+EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=node
 
 
 EMCC.c = $(EMCC) $(CFLAGS) $(CPPFLAGS) -c -DNDEBUG -DOLM_STATIC_DEFINE=1
@@ -246,9 +244,6 @@ $(JS_ESM_TARGET): $(JS_OBJECTS) $(JS_PRE) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(
                -sEXPORTED_RUNTIME_METHODS='$(JS_EXPORTED_RUNTIME_METHODS)' \
                $(JS_OBJECTS) -o $@
 
-# Generate olm_prefix.js from the template
-# javascript/olm_prefix.js: javascript/olm_prefix.js.in # Removing prefix rule
-# 	cp $< $@ # Removing prefix rule
 
 build_tests: $(TEST_BINARIES)
 

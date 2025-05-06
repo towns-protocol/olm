@@ -1,5 +1,10 @@
+// TODO: flag ENVIRONMENT=web or ENVIRONMENT=node in makefile.
+// If set to node, use this file in pre
+
+var nodeCrypto = require("crypto");
 var get_random_values = function (buf) {
-    window.crypto.getRandomValues(buf);
+    var bytes = nodeCrypto["randomBytes"](buf.length);
+    buf.set(bytes);
 };
 
 /* applications should define OLM_OPTIONS in the environment to override
@@ -24,3 +29,9 @@ var NULL_BYTE_PADDING_LENGTH = 1;
 Module["onRuntimeInitialized"] = () => {
     OLM_ERROR = _olm_error();
 };
+
+/* Optional custom abort hook – remove if unused */
+// Module["onAbort"] = err => console.error(err);
+
+// ---- async helper expected by the user ----
+Module.initAsync = () => Module.ready;
