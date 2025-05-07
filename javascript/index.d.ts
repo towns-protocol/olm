@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-export as namespace Olm;
-
-declare class Account {
+export declare class Account {
     constructor();
     free(): void;
     create(): void;
@@ -35,22 +33,29 @@ declare class Account {
     unpickle(key: string | Uint8Array, pickle: string): void;
 }
 
-declare class Session {
+export declare class Session {
     constructor();
     free(): void;
     pickle(key: string | Uint8Array): string;
     unpickle(key: string | Uint8Array, pickle: string): void;
     create_outbound(
-        account: Account, their_identity_key: string, their_one_time_key: string,
+        account: Account,
+        their_identity_key: string,
+        their_one_time_key: string
     ): void;
     create_inbound(account: Account, one_time_key_message: string): void;
     create_inbound_from(
-        account: Account, identity_key: string, one_time_key_message: string,
+        account: Account,
+        identity_key: string,
+        one_time_key_message: string
     ): void;
     session_id(): string;
     has_received_message(): boolean;
     matches_inbound(one_time_key_message: string): boolean;
-    matches_inbound_from(identity_key: string, one_time_key_message: string): boolean;
+    matches_inbound_from(
+        identity_key: string,
+        one_time_key_message: string
+    ): boolean;
     encrypt(plaintext: string): {
         type: 0 | 1; // 0: PreKey, 1: Message
         body: string;
@@ -59,14 +64,18 @@ declare class Session {
     describe(): string;
 }
 
-declare class Utility {
+export declare class Utility {
     constructor();
     free(): void;
     sha256(input: string | Uint8Array): string;
-    ed25519_verify(key: string, message: string | Uint8Array, signature: string): void;
+    ed25519_verify(
+        key: string,
+        message: string | Uint8Array,
+        signature: string
+    ): void;
 }
 
-declare class InboundGroupSession {
+export declare class InboundGroupSession {
     constructor();
     free(): void;
     pickle(key: string | Uint8Array): string;
@@ -82,7 +91,7 @@ declare class InboundGroupSession {
     export_session(message_index: number): string;
 }
 
-declare class OutboundGroupSession {
+export declare class OutboundGroupSession {
     constructor();
     free(): void;
     pickle(key: string | Uint8Array): string;
@@ -94,7 +103,7 @@ declare class OutboundGroupSession {
     message_index(): number;
 }
 
-declare class PkEncryption {
+export declare class PkEncryption {
     constructor();
     free(): void;
     set_recipient_key(key: string): void;
@@ -105,7 +114,7 @@ declare class PkEncryption {
     };
 }
 
-declare class PkDecryption {
+export declare class PkDecryption {
     constructor();
     free(): void;
     init_with_private_key(key: Uint8Array): string;
@@ -116,7 +125,7 @@ declare class PkDecryption {
     decrypt(ephemeral_key: string, mac: string, ciphertext: string): string;
 }
 
-declare class PkSigning {
+export declare class PkSigning {
     constructor();
     free(): void;
     init_with_seed(seed: Uint8Array): string;
@@ -124,7 +133,7 @@ declare class PkSigning {
     sign(message: string): string;
 }
 
-declare class SAS {
+export declare class SAS {
     constructor();
     free(): void;
     get_pubkey(): string;
@@ -135,8 +144,13 @@ declare class SAS {
     calculate_mac_long_kdf(input: string, info: string): string;
 }
 
-export function init(opts?: object): Promise<void>;
+export declare function get_library_version(): [number, number, number];
 
-export function get_library_version(): [number, number, number];
+export declare const PRIVATE_KEY_LENGTH: number;
 
-export const PRIVATE_KEY_LENGTH: number;
+export declare function initAsync({
+    locateFile,
+}: {
+    /** Filepath to the wasm file */
+    locateFile?: (path: string) => string;
+}): Promise<void>;

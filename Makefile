@@ -30,7 +30,9 @@ JS_ASMJS_TARGET := javascript/olm_legacy.js
 WASM_TARGET := $(BUILD_DIR)/wasm/libolm.a
 
 # Define target filenames for ESM and CJS outputs
-JS_ESM_TARGET := javascript/olm.mjs
+JS_ESM_FINAL_TARGET := javascript/olm.mjs
+JS_ESM_NODE_TMP_TARGET := javascript/olm.node.mjs
+JS_ESM_WEB_TMP_TARGET := javascript/olm.web.mjs
 # JS_CJS_TARGET := javascript/olm.cjs
 
 JS_EXPORTED_FUNCTIONS := javascript/exported_functions.json
@@ -65,7 +67,8 @@ WASM_OBJECTS := $(addprefix $(BUILD_DIR)/wasm/,$(OBJECTS))
 # pre & post are the js-pre/js-post options to emcc.
 # They are injected inside the modularised code and
 # processed by the optimiser.
-JS_PRE := $(wildcard javascript/*pre.js)
+JS_PRE_NODE := javascript/olm_pre_node.js
+JS_PRE_WEB := javascript/olm_pre.js
 JS_POST := javascript/olm_outbound_group_session.js \
     javascript/olm_inbound_group_session.js \
     javascript/olm_pk.js \
@@ -75,8 +78,7 @@ JS_POST := javascript/olm_outbound_group_session.js \
 # The prefix & suffix are just added onto the start & end
 # of what comes out emcc, so are outside of the modularised
 # code and not seen by the opimiser.
-# JS_PREFIX := javascript/olm_prefix.js # Removing prefix/suffix mechanism
-# JS_SUFFIX := javascript/olm_suffix.js # Removing prefix/suffix mechanism
+JS_PREFIX := javascript/olm_prefix.js 
 
 DOCS := tracing/README.html \
     docs/megolm.html \
@@ -97,10 +99,7 @@ LDFLAGS += -Wall -Werror
 CFLAGS_NATIVE = -fPIC
 CXXFLAGS_NATIVE = -fPIC
 
-# TODO: change closure 1 to release
-# add O3 to release
-# thats good for web is guess
-EMCCFLAGS = --closure 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s ASSERTIONS=0 -sMODULARIZE=instance -Wno-error=closure -Wno-error=experimental -Wno-deprecated
+EMCCFLAGS = --closure 0 -O3 -s NO_FILESYSTEM=1  -s INVOKE_RUN=0 -s ASSERTIONS=0 -sMODULARIZE=instance -Wno-error=closure -Wno-error=experimental -Wno-deprecated
 
 
 
@@ -112,7 +111,9 @@ EMCCFLAGS = --closure 0 -s NO_FILESYSTEM=1 -g1 -s INVOKE_RUN=0 -s ASSERTIONS=0 -
 # 36K of statics. So let's have 256K of memory.
 # (This can't be changed by the app with wasm since it's baked into the wasm).
 # EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
-EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=node
+EMCCFLAGS_ESM_COMMON := -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1
+EMCCFLAGS_ESM_NODE := $(EMCCFLAGS_ESM_COMMON) -sENVIRONMENT=node
+EMCCFLAGS_ESM_WEB := $(EMCCFLAGS_ESM_COMMON) -sENVIRONMENT=web,worker
 
 
 EMCC.c = $(EMCC) $(CFLAGS) $(CPPFLAGS) -c -DNDEBUG -DOLM_STATIC_DEFINE=1
@@ -174,7 +175,7 @@ $(JS_OBJECTS): CFLAGS += $(JS_OPTIMIZE_FLAGS)
 $(JS_OBJECTS): CXXFLAGS += $(JS_OPTIMIZE_FLAGS)
 $(JS_WASM_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
 $(JS_ASMJS_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
-$(JS_ESM_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
+$(JS_ESM_NODE_TMP_TARGET) $(JS_ESM_WEB_TMP_TARGET): LDFLAGS += $(JS_OPTIMIZE_FLAGS)
 
 ### Fix to make mkdir work on windows and linux
 ifeq ($(shell echo "check_quotes"),"check_quotes")
@@ -222,7 +223,19 @@ static: $(STATIC_RELEASE_TARGET)
 $(STATIC_RELEASE_TARGET): $(RELEASE_OBJECTS)
 	$(AR) rcs $@ $^
 
-js: $(JS_ESM_TARGET)
+js_node: $(JS_ESM_NODE_TMP_TARGET)
+	@echo "Building Node ESM module..."
+	@$(call mkdir,$(dir $(JS_ESM_FINAL_TARGET)))
+	@echo "Node ESM module available at $(JS_ESM_NODE_TMP_TARGET)"
+.PHONY: js_node
+
+js_web: $(JS_ESM_WEB_TMP_TARGET)
+	@echo "Building Web ESM module..."
+	@$(call mkdir,$(dir $(JS_ESM_FINAL_TARGET)))
+	@echo "Web ESM module available at $(JS_ESM_WEB_TMP_TARGET)"
+.PHONY: js_web
+
+js: js_node js_web
 .PHONY: js
 
 wasm: $(WASM_TARGET)
@@ -231,19 +244,33 @@ wasm: $(WASM_TARGET)
 $(WASM_TARGET): $(WASM_OBJECTS)
 	$(EMAR) rcs $@ $^
 
-# Rule for ESM target (olm.mjs) - Restore command line arguments
-$(JS_ESM_TARGET): $(JS_OBJECTS) $(JS_PRE) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(JS_PREFIX) $(JS_SUFFIX)
+# Rule for Node ESM temporary target
+$(JS_ESM_NODE_TMP_TARGET): $(JS_OBJECTS) $(JS_PRE_NODE) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(JS_PREFIX) $(JS_SUFFIX) Makefile
+	@$(call mkdir,$(dir $@))
 	EMCC_CLOSURE_ARGS="--externs $(CURDIR)/$(JS_EXTERNS)" $(EMCC_LINK) \
-	       $(EMCCFLAGS_ESM) \
-               $(foreach f,$(JS_PRE),--pre-js $(f)) \
-               $(foreach f,$(JS_POST),--post-js $(f)) \
-               $(foreach f,$(JS_PREFIX),--extern-pre-js $(f)) \
-               $(foreach f,$(JS_SUFFIX),--extern-post-js $(f)) \
-               -sSINGLE_FILE=0 \
-               -sEXPORTED_FUNCTIONS=@$(JS_EXPORTED_FUNCTIONS) \
-               -sEXPORTED_RUNTIME_METHODS='$(JS_EXPORTED_RUNTIME_METHODS)' \
-               $(JS_OBJECTS) -o $@
+	    $(EMCCFLAGS_ESM_NODE) \
+	    $(foreach f,$(JS_PRE_NODE),--pre-js $(f)) \
+	    $(foreach f,$(JS_POST),--post-js $(f)) \
+	    $(foreach f,$(JS_PREFIX),--extern-pre-js $(f)) \
+	    $(foreach f,$(JS_SUFFIX),--extern-post-js $(f)) \
+	    -sSINGLE_FILE=0 \
+	    -sEXPORTED_FUNCTIONS=@$(JS_EXPORTED_FUNCTIONS) \
+	    -sEXPORTED_RUNTIME_METHODS='$(JS_EXPORTED_RUNTIME_METHODS)' \
+	    $(JS_OBJECTS) -o $@
 
+# Rule for Web ESM temporary target
+$(JS_ESM_WEB_TMP_TARGET): $(JS_OBJECTS) $(JS_PRE_WEB) $(JS_POST) $(JS_EXPORTED_FUNCTIONS) $(JS_PREFIX) $(JS_SUFFIX) Makefile
+	@$(call mkdir,$(dir $@))
+	EMCC_CLOSURE_ARGS="--externs $(CURDIR)/$(JS_EXTERNS)" $(EMCC_LINK) \
+	    $(EMCCFLAGS_ESM_WEB) \
+	    $(foreach f,$(JS_PRE_WEB),--pre-js $(f)) \
+	    $(foreach f,$(JS_POST),--post-js $(f)) \
+	    $(foreach f,$(JS_PREFIX),--extern-pre-js $(f)) \
+	    $(foreach f,$(JS_SUFFIX),--extern-post-js $(f)) \
+	    -sSINGLE_FILE=0 \
+	    -sEXPORTED_FUNCTIONS=@$(JS_EXPORTED_FUNCTIONS) \
+	    -sEXPORTED_RUNTIME_METHODS='$(JS_EXPORTED_RUNTIME_METHODS)' \
+	    $(JS_OBJECTS) -o $@
 
 build_tests: $(TEST_BINARIES)
 

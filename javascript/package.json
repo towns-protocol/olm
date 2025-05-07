@@ -1,26 +1,37 @@
 {
-  "name": "@matrix-org/olm",
+  "name": "@towns-protocol/olm",
   "type": "module",
   "version": "3.2.16",
   "description": "An implementation of the Double Ratchet cryptographic ratchet",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
-      "default": "./olm_web.mjs",
-      "node": "./olm_node.mjs",
-      "types": "./index.d.ts"
+      "require": {
+        "types": "./index.d.ts",
+        "node": "./olm.node.cjs",
+        "default": "./olm.web.cjs"
+      },
+      "import": {
+        "types": "./index.d.ts",
+        "node": "./olm.node.mjs",
+        "default": "./olm.web.mjs"
+      }
     }
   },
   "files": [
-    "olm.mjs",
+    "olm.web.mjs",
+    "olm.node.mjs",
+    "olm.web.cjs",
+    "olm.node.cjs",
     "olm.wasm",
-    "olm_legacy.js",
     "index.d.ts",
-    "README.md",
-    "checksums.txt",
-    "checksums.txt.asc"
+    "README.md"
   ],
   "scripts": {
-    "build": "make -C .. js",
+    "build": "nix build .#javascript",
+    "build:bundle": "tsup",
     "test": "vitest run"
   },
   "repository": {

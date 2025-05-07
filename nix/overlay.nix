@@ -40,10 +40,6 @@ final: prev: {
     src = ./..;
 
     nativeBuildInputs = with prev; [ gnumake python3 nodejs nodePackages.pnpm cacert ];
-    # FIXME: Disabling checks temporarily because the build process was changed
-    # (wrappers not bundled) and the existing `npm test` checkPhase fails.
-    # Re-enable and fix the checkPhase below once the JS wrappers/tests are updated.
-    doCheck = true;
 
     postPatch = ''
       patchShebangs .
@@ -63,16 +59,28 @@ final: prev: {
     
       mkdir -p $out/javascript
       cd javascript
-      echo sha256: > checksums.txt
-      sha256sum olm.mjs olm.wasm >> checksums.txt
-      echo sha512: >> checksums.txt
-      sha512sum olm.mjs olm.wasm >> checksums.txt
-      cp package.json olm.mjs olm.wasm index.d.ts README.md checksums.txt $out/javascript
+      ls -la&>/dev/stdout
+
+      mv olm.web.wasm olm.wasm
+
+      # remove export default async function init -> async function init
+      sed -i 's/export default async function init/async function init/' olm.web.mjs
+      sed -i 's/export default async function init/async function init/' olm.node.mjs
+      
+      sed -i 's/olm.web.wasm/olm.wasm/g' olm.web.mjs
+      sed -i 's/olm.node.wasm/olm.wasm/g' olm.node.mjs
 
       # Copy test directory to output
       if [ -d "test" ]; then
         cp -r test $out/javascript/
       fi
+
+      pnpm install
+      pnpm build:bundle
+
+      cp -r dist/* $out/javascript
+      cp package.json olm.wasm index.d.ts README.md $out/javascript
+
       cd ..
     '';
 
