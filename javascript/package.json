@@ -1,7 +1,7 @@
 {
   "name": "@towns-protocol/olm",
   "type": "module",
-  "version": "3.2.16",
+  "version": "3.2.18",
   "description": "An implementation of the Double Ratchet cryptographic ratchet",
   "publishConfig": {
     "access": "public"
@@ -23,8 +23,6 @@
   "files": [
     "olm.web.mjs",
     "olm.node.mjs",
-    "olm.web.cjs",
-    "olm.node.cjs",
     "olm.wasm",
     "index.d.ts",
     "README.md"
@@ -36,17 +34,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.matrix.org/matrix-org/olm.git"
+    "url": "https://github.com/towns-protocol/olm"
   },
   "keywords": [
     "matrix-org"
   ],
   "author": "matrix.org",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/matrix-org/olm/issues"
-  },
-  "homepage": "https://gitlab.matrix.org/matrix-org/olm",
   "devDependencies": {
     "tsup": "^8.4.0",
     "typescript": "^5.8.3",

@@ -1,5 +1,7 @@
 # @towns-protocol/olm
 
+> This package only exports ESM modules.
+
 Note: before using any of the olm functions, you must call `initAsync()`, and
 wait for the promise to resolve, otherwise you will get errors like:
 `Uncaught TypeError: Olm.Account is not a constructor`
@@ -58,16 +60,4 @@ inbound_session.create(message_index, session_key);
 
 const ciphertext = outbound_session.encrypt("Hello");
 const plaintext = inbound_session.decrypt(ciphertext);
-```
-
-## Usage with CommonJS
-
-The `initAsync` function can be used with CommonJS by providing a `locateFile` function.
-
-```js
-const { initAsync, Account, Session } = require("@towns-protocol/olm");
-async function main() {
-  await initAsync({ locateFile: (path) => path_to_wasm_file });
-  // ... regular olm usage
-}
 ```

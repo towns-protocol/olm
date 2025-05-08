@@ -76,10 +76,11 @@ final: prev: {
       fi
 
       pnpm install
-      pnpm build:bundle
+      # pnpm build:bundle
 
-      cp -r dist/* $out/javascript
+      # cp -r dist/* $out/javascript
       cp package.json olm.wasm index.d.ts README.md $out/javascript
+      cp olm.node.mjs olm.web.mjs $out/javascript
 
       cd ..
     '';
