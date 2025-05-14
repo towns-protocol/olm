@@ -148,9 +148,7 @@ export declare function get_library_version(): [number, number, number];
 
 export declare const PRIVATE_KEY_LENGTH: number;
 
-export declare function initAsync({
-    locateFile,
-}: {
+export function initAsync(opts?: {
     /** Filepath to the wasm file */
     locateFile?: (path: string) => string;
 }): Promise<void>;

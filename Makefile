@@ -99,7 +99,7 @@ LDFLAGS += -Wall -Werror
 CFLAGS_NATIVE = -fPIC
 CXXFLAGS_NATIVE = -fPIC
 
-EMCCFLAGS = --closure 0 -O3 -s NO_FILESYSTEM=1  -s INVOKE_RUN=0 -s -sMODULARIZE=instance -Wno-error=closure -Wno-error=experimental -Wno-deprecated
+EMCCFLAGS = --closure 0 -O3  -s NO_FILESYSTEM=1  -s INVOKE_RUN=0 -s -sMODULARIZE=1 -Wno-error=closure -Wno-error=experimental -Wno-deprecated
 
 
 
@@ -111,7 +111,7 @@ EMCCFLAGS = --closure 0 -O3 -s NO_FILESYSTEM=1  -s INVOKE_RUN=0 -s -sMODULARIZE=
 # 36K of statics. So let's have 256K of memory.
 # (This can't be changed by the app with wasm since it's baked into the wasm).
 # EMCCFLAGS_ESM += -s TOTAL_STACK=65536 -s TOTAL_MEMORY=262144 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1 -sENVIRONMENT=web,worker
-EMCCFLAGS_ESM_COMMON := -s TOTAL_STACK=65536 -s TOTAL_MEMORY=393216 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1
+EMCCFLAGS_ESM_COMMON := -s TOTAL_STACK=1048576 -s TOTAL_MEMORY=2097152 -s ALLOW_MEMORY_GROWTH=0 -sEXPORT_ES6=1
 EMCCFLAGS_ESM_NODE := $(EMCCFLAGS_ESM_COMMON) -sENVIRONMENT=node
 EMCCFLAGS_ESM_WEB := $(EMCCFLAGS_ESM_COMMON) -sENVIRONMENT=web,worker
 

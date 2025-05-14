@@ -1,7 +1,7 @@
 {
   "name": "@towns-protocol/olm",
   "type": "module",
-  "version": "3.2.18",
+  "version": "3.2.19",
   "description": "An implementation of the Double Ratchet cryptographic ratchet",
   "publishConfig": {
     "access": "public"
@@ -18,6 +18,9 @@
         "node": "./olm.node.mjs",
         "default": "./olm.web.mjs"
       }
+    },
+    "./olm.wasm": {
+      "default": "./olm.wasm"
     }
   },
   "files": [

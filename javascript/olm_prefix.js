@@ -1,4 +1,3 @@
-// Declare and export variables that will be populated after initialization
 export let Account;
 export let Session;
 export let Utility;
@@ -22,23 +21,22 @@ export async function initAsync(moduleArg = {}) {
     }
 
     initializationPromise = (async () => {
-        const Module = await init(moduleArg);
+        const module = await Module(moduleArg);
 
         // Populate exported variables
-        Account = Module.Account;
-        Session = Module.Session;
-        Utility = Module.Utility;
-        OutboundGroupSession = Module.OutboundGroupSession;
-        InboundGroupSession = Module.InboundGroupSession;
-        PkEncryption = Module.PkEncryption;
-        PkDecryption = Module.PkDecryption;
-        PkSigning = Module.PkSigning;
-        SAS = Module.SAS;
-        get_library_version = Module.get_library_version;
+        Account = module.Account;
+        Session = module.Session;
+        Utility = module.Utility;
+        OutboundGroupSession = module.OutboundGroupSession;
+        InboundGroupSession = module.InboundGroupSession;
+        PkEncryption = module.PkEncryption;
+        PkDecryption = module.PkDecryption;
+        PkSigning = module.PkSigning;
+        SAS = module.SAS;
+        get_library_version = module.get_library_version;
 
         isInitialized = true;
-        initializationPromise = null; // Clear the promise once resolved
-        // No need to return Module itself from initAsync if the goal is named imports
+        initializationPromise = null;
     })();
 
     return initializationPromise;
