@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "lib": ["DOM", "ES2015", "ES2017"],
+    "allowJs": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "types": ["vitest/globals"],
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["/**/*.ts", "/**/*.js"]
+}

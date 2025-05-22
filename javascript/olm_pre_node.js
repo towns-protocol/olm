@@ -1,5 +1,7 @@
+var nodeCrypto = require("crypto");
 var get_random_values = function (buf) {
-    window.crypto.getRandomValues(buf);
+    var bytes = nodeCrypto["randomBytes"](buf.length);
+    buf.set(bytes);
 };
 
 /* applications should define OLM_OPTIONS in the environment to override
