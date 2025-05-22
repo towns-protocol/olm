@@ -1,10 +1,24 @@
-/** @constructor */
+/**
+ * Constructs a new inbound group session for decrypting group messages.
+ *
+ * Allocates and initializes the underlying cryptographic session using the Olm library.
+ */
 function InboundGroupSession() {
     var size = _olm_inbound_group_session_size();
     this.buf = malloc(size);
     this.ptr = _olm_inbound_group_session(this.buf);
 }
 
+/**
+ * Wraps an Olm group session method to handle errors by throwing JavaScript exceptions.
+ *
+ * Calls the provided function with the current context and arguments. If the underlying Olm function returns an error code, retrieves the last error message and throws an `Error` with the message prefixed by "OLM.".
+ *
+ * @param {Function} wrapped - The Olm group session method to wrap.
+ * @returns {Function} A function that invokes {@link wrapped} and throws an error if the Olm operation fails.
+ *
+ * @throws {Error} If the wrapped Olm function returns an error code, with the Olm error message.
+ */
 function inbound_group_session_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);

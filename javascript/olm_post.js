@@ -2,15 +2,26 @@ var malloc = _malloc;
 var free = _free;
 var OLM_ERROR;
 
+/**
+ * Allocates stack memory of the specified size and fills it using a provided callback.
+ *
+ * @param {number} size - Number of bytes to allocate on the stack.
+ * @param {function(Uint8Array):void} filler - Callback that receives a Uint8Array view of the allocated memory to fill it as needed.
+ * @returns {number} Pointer to the start of the allocated and filled stack memory.
+ */
 function filled_stack(size, filler) {
     var ptr = stackAlloc(size);
     filler(new Uint8Array(HEAPU8.buffer, ptr, size));
     return ptr;
 }
 
-/* allocate a number of bytes of storage on the stack.
+/**
+ * Allocates stack memory and initializes it with zeros or the contents of an array.
  *
- * If size_or_array is a Number, allocates that number of zero-initialised bytes.
+ * If given a number, allocates that many zero-initialized bytes. If given an array or typed array, allocates memory of the same length and copies the array's contents into it.
+ *
+ * @param {number|Array|Uint8Array} size_or_array - Number of bytes to allocate, or an array whose contents will be copied into the allocated memory.
+ * @returns {Uint8Array} A view of the allocated stack memory.
  */
 function stack(size_or_array) {
     return typeof size_or_array == "number"
@@ -22,16 +33,36 @@ function stack(size_or_array) {
           });
 }
 
+/**
+ * Converts a string to a UTF-8 encoded Uint8Array, or returns the input if it is already a Uint8Array.
+ *
+ * @param {string|Uint8Array} string - The input string or Uint8Array.
+ * @returns {Uint8Array} The UTF-8 encoded byte array representation of the input.
+ */
 function array_from_string(string) {
     return string instanceof Uint8Array
         ? string
         : intArrayFromString(string, true);
 }
 
+/**
+ * Allocates stack memory of the specified size and fills it with cryptographically secure random bytes.
+ *
+ * @param {number} size - The number of bytes to allocate and fill with random data.
+ * @returns {Uint8Array} A buffer containing random bytes of the requested size.
+ */
 function random_stack(size) {
     return filled_stack(size, get_random_values);
 }
 
+/**
+ * Wraps a function to save and restore the stack pointer before and after its execution.
+ *
+ * Ensures that any stack allocations made within the wrapped function do not affect the stack state outside its scope.
+ *
+ * @param {Function} wrapped - The function to execute with stack pointer preservation.
+ * @returns {Function} A new function that preserves the stack pointer around the execution of {@link wrapped}.
+ */
 function restore_stack(wrapped) {
     return function () {
         var sp = stackSave();
@@ -43,20 +74,37 @@ function restore_stack(wrapped) {
     };
 }
 
-/* set a memory area to zero */
+/**
+ * Overwrites a block of memory with zeros.
+ *
+ * @param {number} ptr - The starting memory address.
+ * @param {number} n - The number of bytes to set to zero.
+ */
 function bzero(ptr, n) {
     while (n-- > 0) {
         HEAP8[ptr++] = 0;
     }
 }
 
-/** @constructor */
+/**
+ * Constructs a new Olm account, allocating and initializing the required memory.
+ *
+ * @remark The account must be freed with {@link Account#free} when no longer needed to prevent memory leaks.
+ */
 function Account() {
     var size = _olm_account_size();
     this.buf = malloc(size);
     this.ptr = _olm_account(this.buf);
 }
 
+/**
+ * Wraps an account-related Olm function to throw a JavaScript error if the underlying Olm call fails.
+ *
+ * @param {Function} wrapped - The Olm account method to wrap.
+ * @returns {Function} A function that invokes {@link wrapped} and throws an error if the result indicates failure.
+ *
+ * @throws {Error} If the wrapped Olm account function returns {@link OLM_ERROR}, with the last error message from the Olm account.
+ */
 function account_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);
@@ -249,13 +297,23 @@ Account.prototype["unpickle"] = restore_stack(function (key, pickle) {
     }
 });
 
-/** @constructor */
+/**
+ * Constructs a new Olm session object, allocating memory for cryptographic session state.
+ */
 function Session() {
     var size = _olm_session_size();
     this.buf = malloc(size);
     this.ptr = _olm_session(this.buf);
 }
 
+/**
+ * Wraps a session-related Olm function to throw an error if the operation fails.
+ *
+ * If the wrapped function returns {@link OLM_ERROR}, this wrapper extracts the last error message from the session and throws a JavaScript {@link Error} with the message.
+ *
+ * @param {Function} wrapped - The Olm session function to wrap.
+ * @returns {Function} A function that invokes {@link wrapped} and throws on error.
+ */
 function session_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);
@@ -556,13 +614,23 @@ Session.prototype["describe"] = restore_stack(function () {
     }
 });
 
-/** @constructor */
+/**
+ * Constructs a Utility object for performing cryptographic utility operations using the Olm library.
+ *
+ * Allocates and initializes the underlying Olm utility structure in memory.
+ */
 function Utility() {
     var size = _olm_utility_size();
     this.buf = malloc(size);
     this.ptr = _olm_utility(this.buf);
 }
 
+/**
+ * Wraps a utility-related Olm function to throw a JavaScript error if the underlying Olm call fails.
+ *
+ * @param {Function} wrapped - The Olm utility function to wrap.
+ * @returns {Function} A function that calls {@link wrapped} and throws an error with the Olm error message if the result indicates failure.
+ */
 function utility_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);

@@ -3,6 +3,14 @@ let initializationPromise = null;
 
 let OLM_EXPORTS = {};
 
+/**
+ * Asynchronously initializes the cryptographic module and populates exported components.
+ *
+ * Ensures that initialization occurs only once, returning the same promise for concurrent calls. After completion, cryptographic classes and utilities are available on the export object.
+ *
+ * @param {object} [moduleArg={}] - Optional configuration for the underlying module loader.
+ * @returns {Promise<void>} Resolves when initialization is complete.
+ */
 async function initAsync(moduleArg = {}) {
     if (isInitialized) {
         return;

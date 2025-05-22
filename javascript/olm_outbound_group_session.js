@@ -1,10 +1,22 @@
-/** @constructor */
+/**
+ * Creates a new outbound group session for encrypting group messages using the Olm cryptographic library.
+ *
+ * Allocates and initializes the underlying native session resources required for group encryption.
+ */
 function OutboundGroupSession() {
     var size = _olm_outbound_group_session_size();
     this.buf = malloc(size);
     this.ptr = _olm_outbound_group_session(this.buf);
 }
 
+/**
+ * Wraps an Olm outbound group session method to throw a JavaScript error if the underlying call fails.
+ *
+ * @param {Function} wrapped - The Olm outbound group session method to wrap.
+ * @returns {Function} A function that calls {@link wrapped} and throws an error if the result indicates failure.
+ *
+ * @throws {Error} If the wrapped Olm method returns {@link OLM_ERROR}, with the last error message from the Olm library.
+ */
 function outbound_group_session_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);

@@ -1,10 +1,22 @@
-/** @constructor */
+/**
+ * Constructs a new public-key encryption state for encrypting messages to a recipient.
+ *
+ * Allocates and initializes the internal native state required for public-key encryption operations.
+ */
 function PkEncryption() {
     var size = _olm_pk_encryption_size();
     this.buf = malloc(size);
     this.ptr = _olm_pk_encryption(this.buf);
 }
 
+/**
+ * Wraps a native public-key encryption function to throw a JavaScript error if the operation fails.
+ *
+ * If the wrapped function returns {@link OLM_ERROR}, retrieves the last error message from the native encryption state and throws an {@link Error} with the message.
+ *
+ * @param {Function} wrapped - The native encryption function to wrap.
+ * @returns {Function} A function that calls the wrapped native function and throws on error.
+ */
 function pk_encryption_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);
@@ -97,13 +109,23 @@ PkEncryption.prototype["encrypt"] = restore_stack(function (plaintext) {
     }
 });
 
-/** @constructor */
+/**
+ * Constructs a new PkDecryption object for public-key decryption operations.
+ *
+ * Allocates and initializes the native decryption state required to perform public-key decryption using the underlying cryptographic library.
+ */
 function PkDecryption() {
     var size = _olm_pk_decryption_size();
     this.buf = malloc(size);
     this.ptr = _olm_pk_decryption(this.buf);
 }
 
+/**
+ * Wraps a native public-key decryption function to throw a JavaScript error if the native call fails.
+ *
+ * @param {Function} wrapped - The native decryption function to wrap.
+ * @returns {Function} A function that calls {@link wrapped} and throws an error if the result indicates failure.
+ */
 function pk_decryption_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);
@@ -282,13 +304,25 @@ PkDecryption.prototype["decrypt"] = restore_stack(function (
     }
 });
 
-/** @constructor */
+/**
+ * Constructs a new public-key signing object for generating and verifying digital signatures.
+ *
+ * Allocates and initializes the internal state required for public-key signing operations.
+ */
 function PkSigning() {
     var size = _olm_pk_signing_size();
     this.buf = malloc(size);
     this.ptr = _olm_pk_signing(this.buf);
 }
 
+/**
+ * Wraps a native signing function to throw a JavaScript error if the native call fails.
+ *
+ * @param {Function} wrapped - The native signing function to wrap.
+ * @returns {Function} A function that calls {@link wrapped} and throws an error if the result indicates failure.
+ *
+ * @throws {Error} If the native signing function returns an error, with the error message from the native library.
+ */
 function pk_signing_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);

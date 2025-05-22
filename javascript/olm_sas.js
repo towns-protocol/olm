@@ -1,4 +1,8 @@
-/** @constructor */
+/**
+ * Constructs a new SAS (Short Authentication String) instance for cryptographic key verification.
+ *
+ * Allocates and initializes the underlying Olm SAS object, preparing it for use in cryptographic operations such as key exchange and MAC calculation.
+ */
 function SAS() {
     var size = _olm_sas_size();
     var random_length = _olm_create_sas_random_length();
@@ -9,6 +13,16 @@ function SAS() {
     bzero(random, random_length);
 }
 
+/**
+ * Wraps an Olm SAS function to provide standardized error handling.
+ *
+ * Calls the provided SAS function and throws a JavaScript Error with the Olm error message if the function returns {@link OLM_ERROR}.
+ *
+ * @param {Function} wrapped - The Olm SAS function to wrap.
+ * @returns {Function} A function that invokes {@link wrapped} and throws on Olm errors.
+ *
+ * @throws {Error} If the wrapped Olm SAS function returns {@link OLM_ERROR}, with the Olm error message.
+ */
 function sas_method(wrapped) {
     return function () {
         var result = wrapped.apply(this, arguments);

@@ -94,6 +94,14 @@ public:
         return pos;
     }
 
+    /**
+     * @brief Assigns the contents of another list to this list.
+     *
+     * Copies all elements from the given list into this list, replacing any existing elements. If the source and destination are the same, no action is taken.
+     *
+     * @param other The list to copy elements from.
+     * @return Reference to this list after assignment.
+     */
     List<T, max_size> & operator=(List<T, max_size> const & other) {
         if (this == &other) {
             return *this;
