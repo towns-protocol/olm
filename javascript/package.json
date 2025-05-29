@@ -1,35 +1,55 @@
 {
-  "name": "@matrix-org/olm",
-  "version": "3.2.16",
+  "name": "@towns-protocol/olm",
+  "type": "module",
+  "version": "3.2.27",
   "description": "An implementation of the Double Ratchet cryptographic ratchet",
-  "main": "olm.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./index.d.ts",
+        "node": "./olm.node.cjs",
+        "default": "./olm.web.cjs"
+      },
+      "import": {
+        "types": "./index.d.ts",
+        "node": "./olm.node.mjs",
+        "default": "./olm.web.mjs"
+      }
+    },
+    "./olm.wasm": {
+      "default": "./olm.wasm"
+    }
+  },
   "files": [
-    "olm.js",
+    "olm.web.mjs",
+    "olm.web.cjs",
+    "olm.node.mjs",
+    "olm.node.cjs",
     "olm.wasm",
-    "olm_legacy.js",
     "index.d.ts",
-    "README.md",
-    "checksums.txt",
-    "checksums.txt.asc"
+    "README.md"
   ],
   "scripts": {
-    "build": "make -C .. js",
-    "test": "jasmine --config=test/jasmine.json"
+    "build": "nix build .#javascript",
+    "build:bundle": "tsup",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.matrix.org/matrix-org/olm.git"
+    "url": "https://github.com/towns-protocol/olm"
   },
   "keywords": [
     "matrix-org"
   ],
   "author": "matrix.org",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/matrix-org/olm/issues"
-  },
-  "homepage": "https://gitlab.matrix.org/matrix-org/olm",
   "devDependencies": {
-    "jasmine": "^3.0.0"
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
   }
 }

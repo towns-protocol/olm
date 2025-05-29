@@ -39,7 +39,7 @@ final: prev: {
 
     src = ./..;
 
-    nativeBuildInputs = with prev; [ gnumake python3 nodejs ];
+    nativeBuildInputs = with prev; [ gnumake python3 nodejs nodePackages.pnpm cacert ];
 
     postPatch = ''
       patchShebangs .
@@ -48,27 +48,55 @@ final: prev: {
     configurePhase = false;
 
     buildPhase = ''
+      echo "emcc --version"
+      emcc --version &>/dev/stdout
       export EM_CACHE=$TMPDIR
       make javascript/exported_functions.json
       make js
     '';
 
     installPhase = ''
+    
       mkdir -p $out/javascript
       cd javascript
-      echo sha256: > checksums.txt
-      sha256sum olm.js olm_legacy.js olm.wasm >> checksums.txt
-      echo sha512: >> checksums.txt
-      sha512sum olm.js olm_legacy.js olm.wasm >> checksums.txt
-      cp package.json olm.js olm.wasm olm_legacy.js index.d.ts README.md checksums.txt $out/javascript
+      ls -la&>/dev/stdout
+
+      mv olm.web.wasm olm.wasm
+
+      # remove export default async function init -> async function init
+      sed -i 's/export default async function init/async function init/' olm.web.mjs
+      sed -i 's/export default async function init/async function init/' olm.node.mjs
+
+      # remove export default Module from mjs
+      sed -i 's/export default Module//' olm.node.mjs
+      sed -i 's/export default Module//' olm.web.mjs
+      
+      sed -i 's/olm.web.wasm/olm.wasm/g' olm.web.mjs
+      sed -i 's/olm.web.wasm/olm.wasm/g' olm.web.cjs
+      sed -i 's/olm.node.wasm/olm.wasm/g' olm.node.mjs
+      sed -i 's/olm.node.wasm/olm.wasm/g' olm.node.cjs
+
+      # Copy test directory to output
+      if [ -d "test" ]; then
+        cp -r test $out/javascript/
+      fi
+
+      pnpm install
+      # pnpm build:bundle
+
+      # cp -r dist/* $out/javascript
+      cp package.json olm.wasm index.d.ts README.md $out/javascript
+      cp olm.node.mjs olm.web.mjs $out/javascript
+      cp olm.node.cjs olm.web.cjs $out/javascript
+
       cd ..
     '';
 
     checkPhase = ''
       cd javascript
       export HOME=$TMPDIR
-      ln -s ${final.node_modules}/node_modules ./node_modules
-      npm test
+      pnpm install
+      pnpm test
       cd ..
     '';
   };
