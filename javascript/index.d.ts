@@ -174,8 +174,14 @@ export interface SASConstructor {
     new (): SAS;
 }
 
-// Olm Static Interface
-export interface OlmStatic {
+interface OlmInitialization {
+    initAsync(opts?: {
+        /** Filepath to the wasm file */
+        locateFile?: (path: string) => string;
+    }): Promise<OlmImpl>;
+}
+
+export interface OlmImpl {
     Account: AccountConstructor;
     Session: SessionConstructor;
     Utility: UtilityConstructor;
@@ -187,11 +193,7 @@ export interface OlmStatic {
     SAS: SASConstructor;
     get_library_version: () => [number, number, number];
     readonly PRIVATE_KEY_LENGTH: number;
-    initAsync(opts?: {
-        /** Filepath to the wasm file */
-        locateFile?: (path: string) => string;
-    }): Promise<void>;
 }
 
-declare const Olm: OlmStatic;
+declare const Olm: OlmInitialization;
 export default Olm;
