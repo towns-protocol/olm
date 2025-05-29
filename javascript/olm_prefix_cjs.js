@@ -5,7 +5,7 @@ var OLM_EXPORTS = {};
 
 async function initAsync(moduleArg = {}) {
     if (isInitialized) {
-        return;
+        return OLM_EXPORTS;
     }
     if (initializationPromise) {
         return initializationPromise;
@@ -28,6 +28,7 @@ async function initAsync(moduleArg = {}) {
 
         isInitialized = true;
         initializationPromise = null;
+        return OLM_EXPORTS;
     })();
 
     return initializationPromise;
